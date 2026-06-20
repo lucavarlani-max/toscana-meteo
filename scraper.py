@@ -229,34 +229,50 @@ html = f"""<!DOCTYPE html>
 <script src="https://unpkg.com/leaflet@1.9/dist/leaflet.js"></script>
 <style>
   * {{ box-sizing: border-box; }}
-  body {{ font-family: Arial, sans-serif; background: #f4f6f9; color: #222; margin: 0; padding: 20px; }}
-  h1 {{ color: #1F4E79; }} h2 {{ color: #2E75B6; border-bottom: 2px solid #2E75B6; padding-bottom: 4px; margin-top: 36px; }}
-  .stats {{ display: flex; flex-wrap: wrap; gap: 16px; margin: 20px 0; }}
-  .stat-card {{ background: #fff; border-radius: 10px; padding: 16px 24px; box-shadow: 0 2px 8px #0002; min-width: 160px; }}
-  .stat-card .val {{ font-size: 2em; font-weight: bold; color: #1F4E79; }}
-  .stat-card .lbl {{ font-size: 0.85em; color: #666; }}
-  .charts {{ display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 24px 0; }}
-  .chart-box {{ background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px #0002; }}
-  #map {{ height: 500px; border-radius: 12px; box-shadow: 0 2px 10px #0003; margin: 20px 0; }}
-  .map-legend {{ background: #fff; padding: 10px 14px; border-radius: 8px; box-shadow: 0 1px 6px #0002; font-size: 0.85em; line-height: 2; }}
-  .ranking-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 24px 0; }}
-  .ranking-box {{ background: #fff; border-radius: 12px; padding: 22px 24px; box-shadow: 0 2px 10px #0002; }}
-  .ranking-box h3 {{ margin: 0 0 16px; font-size: 1.05em; color: #333; }}
-  .rank-row {{ display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }}
+  body {{ font-family: Arial, sans-serif; background: #f4f6f9; color: #222; margin: 0; padding: 16px; }}
+  h1 {{ color: #1F4E79; font-size: clamp(1.3em, 4vw, 2em); margin-bottom: 4px; }}
+  h2 {{ color: #2E75B6; border-bottom: 2px solid #2E75B6; padding-bottom: 4px; margin-top: 32px; font-size: clamp(1em, 3vw, 1.4em); }}
+  /* stat cards */
+  .stats {{ display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0; }}
+  .stat-card {{ background: #fff; border-radius: 10px; padding: 14px 18px; box-shadow: 0 2px 8px #0002; flex: 1 1 140px; }}
+  .stat-card .val {{ font-size: clamp(1.4em, 4vw, 2em); font-weight: bold; color: #1F4E79; }}
+  .stat-card .lbl {{ font-size: 0.82em; color: #666; }}
+  /* grafici */
+  .charts {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }}
+  .chart-box {{ background: #fff; border-radius: 10px; padding: 16px; box-shadow: 0 2px 8px #0002; }}
+  /* mappa */
+  #map {{ height: 420px; border-radius: 12px; box-shadow: 0 2px 10px #0003; margin: 16px 0; }}
+  .map-legend {{ background: #fff; padding: 8px 12px; border-radius: 8px; box-shadow: 0 1px 6px #0002; font-size: 0.82em; line-height: 2; }}
+  /* ranking */
+  .ranking-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }}
+  .ranking-box {{ background: #fff; border-radius: 12px; padding: 18px 20px; box-shadow: 0 2px 10px #0002; }}
+  .ranking-box h3 {{ margin: 0 0 14px; font-size: 0.98em; color: #333; }}
+  .rank-row {{ display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }}
   .rank-row:hover .rank-bar {{ filter: brightness(1.12); }}
-  .rank-num {{ min-width: 34px; text-align: center; font-size: 1em; }}
+  .rank-num {{ min-width: 30px; text-align: center; font-size: 0.95em; }}
   .rank-bar-wrap {{ flex: 1; min-width: 0; }}
-  .rank-label {{ font-size: 0.82em; color: #444; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
-  .rank-bar-track {{ background: #f0f0f0; border-radius: 6px; height: 24px; }}
-  .rank-bar {{ height: 100%; border-radius: 6px; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; transition: width 0.3s; min-width: 48px; }}
-  .rank-val {{ color: #fff; font-weight: bold; font-size: 0.85em; text-shadow: 0 1px 2px #0005; }}
-  table {{ border-collapse: collapse; width: 100%; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px #0002; margin-bottom: 30px; }}
-  th {{ background: #1F4E79; color: #fff; padding: 10px; text-align: left; }}
-  td {{ padding: 8px 10px; border-bottom: 1px solid #eee; vertical-align: middle; }}
+  .rank-label {{ font-size: 0.78em; color: #444; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
+  .rank-bar-track {{ background: #f0f0f0; border-radius: 6px; height: 22px; }}
+  .rank-bar {{ height: 100%; border-radius: 6px; display: flex; align-items: center; justify-content: flex-end; padding-right: 7px; transition: width 0.3s; min-width: 44px; }}
+  .rank-val {{ color: #fff; font-weight: bold; font-size: 0.82em; text-shadow: 0 1px 2px #0005; }}
+  /* tabella */
+  .table-wrap {{ width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }}
+  table {{ border-collapse: collapse; width: 100%; min-width: 600px; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px #0002; margin-bottom: 30px; }}
+  th {{ background: #1F4E79; color: #fff; padding: 10px; text-align: left; white-space: nowrap; }}
+  td {{ padding: 7px 9px; border-bottom: 1px solid #eee; vertical-align: middle; font-size: 0.9em; }}
   tr:hover td {{ background: #f0f7ff; }}
   .footer {{ font-size: 0.8em; color: #888; margin-top: 30px; }}
-  input#search, select#provFilter {{ padding: 8px 14px; border: 1px solid #ccc; border-radius: 6px; font-size: 1em; }}
-  input#search {{ width: 260px; }}
+  input#search {{ padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 1em; width: 100%; max-width: 260px; }}
+  select#provFilter {{ padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 1em; }}
+  .filter-bar {{ display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }}
+  /* responsive */
+  @media (max-width: 650px) {{
+    .charts {{ grid-template-columns: 1fr; }}
+    .ranking-grid {{ grid-template-columns: 1fr; }}
+    #map {{ height: 320px; }}
+    .stat-card {{ flex: 1 1 120px; }}
+    body {{ padding: 10px; }}
+  }}
 </style>
 </head>
 <body>
@@ -299,7 +315,7 @@ html = f"""<!DOCTYPE html>
 </div>
 
 <h2>&#x1F4CB; Tutte le stazioni</h2>
-<div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+<div class="filter-bar">
   <input id="search" type="text" placeholder="Cerca stazione..." oninput="applyFilters()">
   <select id="provFilter" onchange="applyFilters()">
     <option value="">Tutte le province</option>
@@ -307,10 +323,12 @@ html = f"""<!DOCTYPE html>
   </select>
   <span id="countLabel" style="color:#666;font-size:0.9em"></span>
 </div>
+<div class="table-wrap">
 <table id="stTable">
   <tr><th>ID</th><th>Stazione</th><th>Prov.</th><th>Area</th><th>Quota</th><th>Temp Attuale</th><th>Tmin Oggi</th><th>Tmax Oggi</th></tr>
   {table_rows}
 </table>
+</div>
 
 <div class="footer">
   Fonte: <a href="https://www.cfr.toscana.it/monitoraggio/stazioni.php?type=termo">Centro Funzionale Regione Toscana</a>
