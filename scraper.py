@@ -194,16 +194,28 @@ for s in stations_sorted:
     tc = to_float(s["temp_current"])
     color = row_color(tc)
     badge = f'<span style="background:{color};color:#fff;padding:2px 7px;border-radius:12px;font-weight:bold">{tc}&deg;C</span>' if tc is not None else "N/D"
+    tmin_y = to_float(s['temp_min_yesterday'])
+    tmax_y = to_float(s['temp_max_yesterday'])
+    tmin_t = to_float(s['temp_min_today'])
+    tmax_t = to_float(s['temp_max_today'])
     table_rows += f"""
-    <tr data-prov="{s['province']}">
-      <td>{s['id']}</td>
-      <td><strong>{s['name']}</strong></td>
+    <tr data-prov="{s['province']}"
+        data-curr="{tc if tc is not None else ''}"
+        data-tmin="{tmin_t if tmin_t is not None else ''}"
+        data-tmax="{tmax_t if tmax_t is not None else ''}"
+        data-tmin-y="{tmin_y if tmin_y is not None else ''}"
+        data-tmax-y="{tmax_y if tmax_y is not None else ''}"
+        data-name="{s['name']}" data-prov2="{s['province']}"
+        data-alt="{s['altitude']}">
+      <td>{s['name'].replace(' (RADIO)','').replace(' (GPRS)','').replace(' (GSM)','')}</td>
       <td>{s['province']}</td>
       <td>{s['area']}</td>
-      <td>{s['altitude']} m</td>
+      <td>{s['altitude']}</td>
       <td style="text-align:center">{badge}</td>
       <td>{s['temp_min_today']}&deg;C<br><small>{s['temp_min_today_time']}</small></td>
       <td>{s['temp_max_today']}&deg;C<br><small>{s['temp_max_today_time']}</small></td>
+      <td>{s['temp_min_yesterday'] if s['temp_min_yesterday'] else 'N/D'}&deg;C<br><small>{s['temp_min_yesterday_time']}</small></td>
+      <td>{s['temp_max_yesterday'] if s['temp_max_yesterday'] else 'N/D'}&deg;C<br><small>{s['temp_max_yesterday_time']}</small></td>
     </tr>"""
 
 chart_fasce_labels = json.dumps(list(fasce.keys()))
@@ -259,6 +271,12 @@ html = f"""<!DOCTYPE html>
   .table-wrap {{ width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }}
   table {{ border-collapse: collapse; width: 100%; min-width: 600px; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px #0002; margin-bottom: 30px; }}
   th {{ background: #1F4E79; color: #fff; padding: 10px; text-align: left; white-space: nowrap; }}
+  th.sortable {{ cursor: pointer; user-select: none; }}
+  th.sortable:hover {{ background: #2563a8; }}
+  th.sort-asc .sort-icon::after {{ content: ' ▲'; }}
+  th.sort-desc .sort-icon::after {{ content: ' ▼'; }}
+  th.sort-asc .sort-icon, th.sort-desc .sort-icon {{ opacity: 0; }}
+  .sort-icon {{ opacity: 0.4; font-size: 0.8em; }}
   td {{ padding: 7px 9px; border-bottom: 1px solid #eee; vertical-align: middle; font-size: 0.9em; }}
   tr:hover td {{ background: #f0f7ff; }}
   .footer {{ font-size: 0.8em; color: #888; margin-top: 30px; }}
@@ -325,8 +343,18 @@ html = f"""<!DOCTYPE html>
 </div>
 <div class="table-wrap">
 <table id="stTable">
-  <tr><th>ID</th><th>Stazione</th><th>Prov.</th><th>Area</th><th>Quota</th><th>Temp Attuale</th><th>Tmin Oggi</th><th>Tmax Oggi</th></tr>
-  {table_rows}
+  <thead><tr>
+    <th class="sortable" data-col="name">Stazione <span class="sort-icon">⇅</span></th>
+    <th class="sortable" data-col="prov2">Prov. <span class="sort-icon">⇅</span></th>
+    <th>Area</th>
+    <th class="sortable" data-col="alt">Quota <span class="sort-icon">⇅</span></th>
+    <th class="sortable" data-col="curr">Temp Att. <span class="sort-icon">⇅</span></th>
+    <th class="sortable" data-col="tmin">Tmin Oggi <span class="sort-icon">⇅</span></th>
+    <th class="sortable" data-col="tmax">Tmax Oggi <span class="sort-icon">⇅</span></th>
+    <th class="sortable" data-col="tmin-y">Tmin Ieri <span class="sort-icon">⇅</span></th>
+    <th class="sortable" data-col="tmax-y">Tmax Ieri <span class="sort-icon">⇅</span></th>
+  </tr></thead>
+  <tbody>{table_rows}</tbody>
 </table>
 </div>
 
@@ -340,7 +368,7 @@ function applyFilters() {{
   const q = document.getElementById('search').value.toLowerCase();
   const prov = document.getElementById('provFilter').value;
   let visible = 0;
-  document.querySelectorAll('#stTable tr:not(:first-child)').forEach(r => {{
+  document.querySelectorAll('#stTable tbody tr').forEach(r => {{
     const ok = (!q || r.innerText.toLowerCase().includes(q)) && (!prov || r.dataset.prov === prov);
     r.style.display = ok ? '' : 'none';
     if (ok) visible++;
@@ -348,6 +376,33 @@ function applyFilters() {{
   document.getElementById('countLabel').textContent = visible + ' stazioni';
 }}
 applyFilters();
+
+// Ordinamento tabella
+let sortCol = 'tmax', sortDir = -1;
+function sortTable(col) {{
+  if (sortCol === col) {{ sortDir *= -1; }} else {{ sortCol = col; sortDir = -1; }}
+  document.querySelectorAll('#stTable th.sortable').forEach(th => {{
+    th.classList.remove('sort-asc','sort-desc');
+    if (th.dataset.col === col) th.classList.add(sortDir === 1 ? 'sort-asc' : 'sort-desc');
+  }});
+  const tbody = document.querySelector('#stTable tbody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  // converti col (es. "tmin-y") in chiave dataset camelCase ("tminY")
+  const key = col.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+  rows.sort((a, b) => {{
+    const av = a.dataset[key] ?? '';
+    const bv = b.dataset[key] ?? '';
+    const an = parseFloat(av), bn = parseFloat(bv);
+    if (!isNaN(an) && !isNaN(bn)) return (an - bn) * sortDir;
+    return av.localeCompare(bv, 'it') * sortDir;
+  }});
+  rows.forEach(r => tbody.appendChild(r));
+}}
+document.querySelectorAll('#stTable th.sortable').forEach(th => {{
+  th.addEventListener('click', () => sortTable(th.dataset.col));
+}});
+// ordine iniziale: Tmax oggi decrescente
+sortTable('tmax');
 
 const mapStations = {map_stations_json};
 const map = L.map('map').setView([43.5, 11.1], 7);
