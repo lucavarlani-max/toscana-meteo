@@ -1,0 +1,282 @@
+{
+  "Torricelle (GPRS)": [
+    43.7577485,
+    11.1630161
+  ],
+  "Monte Pisano Nord (RADIO)": [
+    43.7597703,
+    10.4502867
+  ],
+  "Firenze Orto Botanico (RADIO)": [
+    43.7792262,
+    11.2613011
+  ],
+  "Monteboro (RADIO)": [
+    43.6946048,
+    10.9181951
+  ],
+  "Prato Universita (GPRS)": [
+    43.880254,
+    11.099193
+  ],
+  "Prato Università (GPRS)": [
+    43.880254,
+    11.099193
+  ],
+  "Firenze Giardino di Boboli (RADIO)": [
+    43.7632781,
+    11.2498992
+  ],
+  "Ponte SR439 9 (GPRS)": [
+    43.6539869,
+    10.6415602
+  ],
+  "Castiglion Fibocchi (RADIO)": [
+    43.5279646,
+    11.7631758
+  ],
+  "Borgo S. Lorenzo (GPRS)": [
+    43.954248,
+    11.3864681
+  ],
+  "Monte Oliveto (GPRS)": [
+    43.1751596,
+    11.5440101
+  ],
+  "Artimino (RADIO)": [
+    43.7827371,
+    11.0357841
+  ],
+  "Casa Rota (RADIO)": [
+    43.7287864,
+    10.502928
+  ],
+  "Montespertoli (GPRS)": [
+    43.6467537,
+    11.0669289
+  ],
+  "Remole (GPRS)": [
+    43.7971496,
+    11.4000833
+  ],
+  "Stiacciole (RADIO)": [
+    42.7804004,
+    11.1778449
+  ],
+  "Ortignano (RADIO)": [
+    43.6799414,
+    11.7469792
+  ],
+  "Orto di Donna (GPRS)": [
+    44.1211235,
+    10.2008795
+  ],
+  "Camporgiano (GPRS)": [
+    44.1580565,
+    10.3351514
+  ],
+  "Gaiole in Chianti (RADIO)": [
+    43.4682951,
+    11.4342003
+  ],
+  "Badia Agnano (GPRS)": [
+    43.4363251,
+    11.6476077
+  ],
+  "Montopoli (RADIO)": [
+    43.6702986,
+    10.7608316
+  ],
+  "Villafranca (RADIO)": [
+    44.2946703,
+    9.9496556
+  ],
+  "Licciana Nardi (GPRS)": [
+    44.2648672,
+    10.0381722
+  ],
+  "Equi Terme (RADIO)": [
+    44.168239,
+    10.152565
+  ],
+  "Pontremoli depuratore (RADIO)": [
+    44.3771813,
+    9.8829911
+  ],
+  "Barga (RADIO)": [
+    44.0739178,
+    10.484263
+  ],
+  "Palazzo del Pero 1 (GPRS)": [
+    43.4217013,
+    11.9757275
+  ],
+  "Campagrina (GPRS)": [
+    44.0595635,
+    10.2559862
+  ],
+  "Firenze Università (GPRS)": [
+    43.7783667,
+    11.2600543
+  ],
+  "S. Giusto (GPRS)": [
+    43.7050509,
+    10.39908
+  ],
+  "Siena Poggio al Vento (RADIO)": [
+    43.1672059,
+    11.467561
+  ],
+  "Pelago (RADIO)": [
+    43.7718235,
+    11.5046302
+  ],
+  "La Ferruccia (RADIO)": [
+    43.8816104,
+    10.9985356
+  ],
+  "Ponsano (RADIO)": [
+    43.3646553,
+    10.989227
+  ],
+  "Castelnuovo B.ga (RADIO)": [
+    43.3455237,
+    11.5018883
+  ],
+  "Cerreto Guidi (GPRS)": [
+    43.7580104,
+    10.8596148
+  ],
+  "Cortona (GPRS)": [
+    43.2752976,
+    11.9850623
+  ],
+  "Volterra Balze (RADIO)": [
+    43.400337,
+    10.860019
+  ],
+  "Braccagni (RADIO)": [
+    42.8736579,
+    11.0736302
+  ],
+  "Montenero (RADIO)": [
+    43.384856,
+    11.2821838
+  ],
+  "Buonconvento (RADIO)": [
+    43.1381881,
+    11.482096
+  ],
+  "Castel del Piano (GPRS)": [
+    42.8932352,
+    11.5383804
+  ],
+  "Pitigliano (RADIO)": [
+    42.634827,
+    11.673549
+  ],
+  "Usi (RADIO)": [
+    42.7228089,
+    11.4627486
+  ],
+  "Rispescia (RADIO)": [
+    42.7069737,
+    11.1349793
+  ],
+  "S. Donato (RADIO)": [
+    43.7143636,
+    12.2752792
+  ],
+  "Ponte Tura (RADIO)": [
+    42.7645577,
+    11.1655381
+  ],
+  "Donoratico (RADIO)": [
+    43.1680324,
+    10.5664095
+  ],
+  "Semproniano (RADIO)": [
+    42.7306583,
+    11.5403457
+  ],
+  "Campiglia Marittima (GPRS)": [
+    43.0401668,
+    10.603649
+  ],
+  "Caldana (GPRS)": [
+    42.8948497,
+    10.9268329
+  ],
+  "Casotto dei Pescatori (RADIO)": [
+    42.7627186,
+    11.0164323
+  ],
+  "Massa Marittima Valpiana (RADIO)": [
+    43.0139284,
+    10.8729203
+  ],
+  "Suvereto (RADIO)": [
+    43.079015,
+    10.6786806
+  ],
+  "Corbolone (GPRS)": [
+    43.5518904,
+    10.4061306
+  ],
+  "Mensano (GPRS)": [
+    43.3009594,
+    11.0548528
+  ],
+  "Cecina (RADIO)": [
+    43.3113449,
+    10.5173443
+  ],
+  "Bibbona (RADIO)": [
+    43.2697843,
+    10.5972697
+  ],
+  "Roccatederighi (RADIO)": [
+    43.0283143,
+    11.0815144
+  ],
+  "Rigomagno (GPRS)": [
+    43.262155,
+    11.6965032
+  ],
+  "Capraia Isola (RADIO)": [
+    43.0374371,
+    9.8225555
+  ],
+  "Scorgiano (RADIO)": [
+    43.3521445,
+    11.15867
+  ],
+  "Legoli (RADIO)": [
+    43.5725208,
+    10.7968643
+  ],
+  "Castelfiorentino (GPRS)": [
+    43.6056068,
+    10.9712484
+  ],
+  "Gabbro (GPRS)": [
+    43.4826444,
+    10.4406876
+  ],
+  "Manciano (GPRS)": [
+    42.5872822,
+    11.5157197
+  ],
+  "Casciana Terme (GPRS)": [
+    43.527338,
+    10.618212
+  ],
+  "Sambuca (RADIO)": [
+    43.5674009,
+    11.2172687
+  ],
+  "Baccinello (RADIO)": [
+    42.7906569,
+    11.3640624
+  ]
+}
