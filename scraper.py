@@ -54,13 +54,139 @@ for row in _rows:
         "temp_max_yesterday_time": c[15] if len(c) > 15 else "",
     })
 
-print(f"Stazioni: {len(stations)} | Timestamp: {timestamp}")
+print(f"Stazioni termo: {len(stations)} | Timestamp: {timestamp}")
 
 def to_float(v):
     try:
-        return float(str(v).replace(",", "."))
+        return float(re.sub(r'<[^>]+>', '', str(v)).replace(",", "."))
     except:
         return None
+
+# -- SCARICA DATI PLUVIO ----------------------------------------------------
+print("Scarico dati pluviometrici...")
+_req2 = urllib.request.Request(
+    "https://www.cfr.toscana.it/monitoraggio/stazioni.php?type=pluvio",
+    headers={"User-Agent": "Mozilla/5.0"}
+)
+with urllib.request.urlopen(_req2, context=_ctx, timeout=20) as _r2:
+    _html2 = _r2.read().decode("utf-8", errors="replace")
+
+_arr2 = re.search(r'(\w+)\[0\] = new Array\("TOS\w+","[^"]+\((RADIO|GPRS|GSM)\)', _html2)
+if not _arr2:
+    raise RuntimeError("Array pluvio non trovato")
+_arr2_name = _arr2.group(1)
+_rows2 = re.findall(
+    rf'{_arr2_name}\[\d+\] = new Array\(("TOS.+?"(?:,"[^"]*")*)\)',
+    _html2
+)
+
+def _strip_html(s):
+    return re.sub(r'<[^>]+>', '', s).strip()
+
+pluvio_stations = []
+for row in _rows2:
+    c = [_unquote(x) for x in row.split('","')]
+    if len(c) < 12 or not c[0].startswith("TOS"):
+        continue
+    pluvio_stations.append({
+        "id": c[0], "name": c[1], "province": c[2], "area": c[3],
+        "p15m":  _strip_html(c[4]),
+        "ph1":   _strip_html(c[5]),
+        "ph3":   _strip_html(c[6]),
+        "ph6":   _strip_html(c[7]),
+        "ph12":  _strip_html(c[8]),
+        "ph24":  _strip_html(c[9]),
+        "ph36":  _strip_html(c[10]),
+        "last_update": c[11],
+        "altitude": c[17] if len(c) > 17 else "",
+    })
+
+print(f"Stazioni pluvio: {len(pluvio_stations)}")
+
+# -- STATISTICHE PLUVIO -----------------------------------------------------
+def pf(s, key):
+    return to_float(s.get(key))
+
+# top 10 per pioggia ultime 24h (escludi zero)
+pluvio_sorted_24h = sorted(
+    [s for s in pluvio_stations if (pf(s,"ph24") or 0) > 0],
+    key=lambda s: pf(s,"ph24") or 0, reverse=True
+)
+top10_pluvio = pluvio_sorted_24h[:10]
+
+max_ph24 = pf(top10_pluvio[0], "ph24") if top10_pluvio else 0
+max_ph24_name = top10_pluvio[0]["name"] if top10_pluvio else "N/D"
+max_ph1  = max((pf(s,"ph1") or 0 for s in pluvio_stations), default=0)
+max_ph1_name = next((s["name"] for s in pluvio_stations if (pf(s,"ph1") or 0) == max_ph1), "N/D")
+n_pioggia = len([s for s in pluvio_stations if (pf(s,"ph1") or 0) > 0])
+
+# ranking html pioggia
+def build_pluvio_ranking(items):
+    if not items:
+        return "<p style='color:#888'>Nessuna precipitazione registrata</p>"
+    vals = [pf(s,"ph24") or 0 for s in items]
+    v_max = max(vals) if vals else 1
+    rows = ""
+    for rank, s in enumerate(items, 1):
+        val = pf(s,"ph24") or 0
+        pct = max(round(val / v_max * 100), 4)
+        intensity = val / v_max
+        r2 = int(30 + 60 * intensity)
+        g2 = int(100 + 80 * intensity)
+        b2 = int(200)
+        bar_color = f"rgb({r2},{g2},{b2})"
+        medals = {1:"&#x1F947;", 2:"&#x1F948;", 3:"&#x1F949;"}
+        prefix = medals.get(rank, f"{rank}.")
+        short = re.sub(r'\s*\((RADIO|GPRS|GSM)\)', '', s["name"])
+        prov_badge = f'<span style="background:#eee;color:#555;border-radius:4px;padding:1px 6px;font-size:0.78em;margin-left:6px">{s["province"]}</span>'
+        rows += f"""
+        <div class="rank-row">
+          <span class="rank-num">{prefix}</span>
+          <div class="rank-bar-wrap">
+            <div class="rank-label">{short}{prov_badge}</div>
+            <div class="rank-bar-track">
+              <div class="rank-bar" style="width:{pct}%;background:{bar_color}">
+                <span class="rank-val">{val} mm</span>
+              </div>
+            </div>
+          </div>
+        </div>"""
+    return rows
+
+pluvio_ranking_html = build_pluvio_ranking(top10_pluvio)
+
+# tabella pluvio
+prov_pluvio = sorted(set(s["province"] for s in pluvio_stations))
+prov_pluvio_options = "\n".join(f'<option value="{p}">{p}</option>' for p in prov_pluvio)
+pluvio_sorted_table = sorted(pluvio_stations, key=lambda s: pf(s,"ph24") or 0, reverse=True)
+
+pluvio_table_rows = ""
+for s in pluvio_sorted_table:
+    v24 = pf(s, "ph24") or 0
+    v1  = pf(s, "ph1")  or 0
+    bg = ""
+    if v24 >= 50:   bg = "background:#ffdddd"
+    elif v24 >= 20: bg = "background:#fff3cc"
+    elif v24 >= 5:  bg = "background:#e8f4fd"
+    pluvio_table_rows += f"""
+    <tr data-pprov="{s['province']}"
+        data-p15m="{s['p15m']}" data-ph1="{s['ph1']}" data-ph3="{s['ph3']}"
+        data-ph6="{s['ph6']}" data-ph12="{s['ph12']}" data-ph24="{s['ph24']}"
+        data-ph36="{s['ph36']}" data-pname="{s['name']}" data-pprov2="{s['province']}"
+        style="{bg}">
+      <td>{s['name'].replace(' (RADIO)','').replace(' (GPRS)','').replace(' (GSM)','')}</td>
+      <td>{s['province']}</td>
+      <td>{s['area']}</td>
+      <td>{s['altitude']} m</td>
+      <td style="text-align:center"><b>{s['p15m']}</b></td>
+      <td style="text-align:center">{s['ph1']}</td>
+      <td style="text-align:center">{s['ph3']}</td>
+      <td style="text-align:center">{s['ph6']}</td>
+      <td style="text-align:center">{s['ph12']}</td>
+      <td style="text-align:center"><b>{s['ph24']}</b></td>
+      <td style="text-align:center">{s['ph36']}</td>
+      <td style="text-align:center;font-size:0.82em">{s['last_update']}</td>
+    </tr>"""
 
 # -- STATISTICHE ------------------------------------------------------------
 temps_curr = [to_float(s["temp_current"]) for s in stations if to_float(s["temp_current"]) is not None]
@@ -271,11 +397,12 @@ html = f"""<!DOCTYPE html>
   .table-wrap {{ width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }}
   table {{ border-collapse: collapse; width: 100%; min-width: 600px; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px #0002; margin-bottom: 30px; }}
   th {{ background: #1F4E79; color: #fff; padding: 10px; text-align: left; white-space: nowrap; }}
-  th.sortable {{ cursor: pointer; user-select: none; }}
-  th.sortable:hover {{ background: #2563a8; }}
-  th.sort-asc .sort-icon::after {{ content: ' ▲'; }}
-  th.sort-desc .sort-icon::after {{ content: ' ▼'; }}
-  th.sort-asc .sort-icon, th.sort-desc .sort-icon {{ opacity: 0; }}
+  th.sortable, th.psortable {{ cursor: pointer; user-select: none; }}
+  th.sortable:hover, th.psortable:hover {{ background: #2563a8; }}
+  th.sort-asc .sort-icon::after, th.psort-asc .sort-icon::after {{ content: ' ▲'; }}
+  th.sort-desc .sort-icon::after, th.psort-desc .sort-icon::after {{ content: ' ▼'; }}
+  th.sort-asc .sort-icon, th.sort-desc .sort-icon,
+  th.psort-asc .sort-icon, th.psort-desc .sort-icon {{ opacity: 0; }}
   .sort-icon {{ opacity: 0.4; font-size: 0.8em; }}
   td {{ padding: 7px 9px; border-bottom: 1px solid #eee; vertical-align: middle; font-size: 0.9em; }}
   tr:hover td {{ background: #f0f7ff; }}
@@ -358,6 +485,49 @@ html = f"""<!DOCTYPE html>
 </table>
 </div>
 
+<h2>&#x1F327; Precipitazioni</h2>
+<div class="stats">
+  <div class="stat-card"><div class="val" style="color:#1a6abf">{max_ph24} mm</div><div class="lbl">Max pioggia 24h<br><small>{max_ph24_name.replace(' (RADIO)','').replace(' (GPRS)','')}</small></div></div>
+  <div class="stat-card"><div class="val" style="color:#1a6abf">{max_ph1} mm</div><div class="lbl">Max pioggia ultima ora<br><small>{max_ph1_name.replace(' (RADIO)','').replace(' (GPRS)','')}</small></div></div>
+  <div class="stat-card"><div class="val">{n_pioggia}</div><div class="lbl">Stazioni con pioggia<br><small>nell'ultima ora</small></div></div>
+  <div class="stat-card"><div class="val">{len(pluvio_stations)}</div><div class="lbl">Stazioni pluviometriche<br><small>totali Toscana</small></div></div>
+</div>
+
+<div class="ranking-box" style="margin:20px 0">
+  <h3>&#x1F4A7; Top 10 stazioni &mdash; Pioggia cumulata 24h</h3>
+  {pluvio_ranking_html}
+</div>
+
+<h3 style="color:#2E75B6;margin-top:28px">&#x1F4CB; Tabella stazioni pluviometriche</h3>
+<p style="font-size:0.85em;color:#666">Valori in mm &mdash; <span style="background:#e8f4fd;padding:2px 6px;border-radius:4px">&ge;5mm</span> <span style="background:#fff3cc;padding:2px 6px;border-radius:4px">&ge;20mm</span> <span style="background:#ffdddd;padding:2px 6px;border-radius:4px">&ge;50mm</span></p>
+<div class="filter-bar">
+  <input id="searchPluvio" type="text" placeholder="Cerca stazione..." oninput="applyPluvioFilters()">
+  <select id="provPluvioFilter" onchange="applyPluvioFilters()">
+    <option value="">Tutte le province</option>
+    {prov_pluvio_options}
+  </select>
+  <span id="countPluvioLabel" style="color:#666;font-size:0.9em"></span>
+</div>
+<div class="table-wrap">
+<table id="pluvioTable">
+  <thead><tr>
+    <th class="psortable" data-col="pname">Stazione <span class="sort-icon">⇅</span></th>
+    <th class="psortable" data-col="pprov2">Prov. <span class="sort-icon">⇅</span></th>
+    <th>Area</th>
+    <th>Quota</th>
+    <th class="psortable" data-col="p15m">&#916;15' <span class="sort-icon">⇅</span></th>
+    <th class="psortable" data-col="ph1">&#916;1h <span class="sort-icon">⇅</span></th>
+    <th class="psortable" data-col="ph3">&#916;3h <span class="sort-icon">⇅</span></th>
+    <th class="psortable" data-col="ph6">&#916;6h <span class="sort-icon">⇅</span></th>
+    <th class="psortable" data-col="ph12">&#916;12h <span class="sort-icon">⇅</span></th>
+    <th class="psortable" data-col="ph24">&#916;24h <span class="sort-icon">⇅</span></th>
+    <th class="psortable" data-col="ph36">&#916;36h <span class="sort-icon">⇅</span></th>
+    <th>Ultimo dato</th>
+  </tr></thead>
+  <tbody>{pluvio_table_rows}</tbody>
+</table>
+</div>
+
 <div class="footer">
   Fonte: <a href="https://www.cfr.toscana.it/monitoraggio/stazioni.php?type=termo">Centro Funzionale Regione Toscana</a>
   &mdash; Generato il {generated_at}
@@ -401,8 +571,45 @@ function sortTable(col) {{
 document.querySelectorAll('#stTable th.sortable').forEach(th => {{
   th.addEventListener('click', () => sortTable(th.dataset.col));
 }});
-// ordine iniziale: Tmax oggi decrescente
 sortTable('tmax');
+
+// -- FILTRI E SORT PLUVIO --------------------------------------------------
+function applyPluvioFilters() {{
+  const q = document.getElementById('searchPluvio').value.toLowerCase();
+  const prov = document.getElementById('provPluvioFilter').value;
+  let visible = 0;
+  document.querySelectorAll('#pluvioTable tbody tr').forEach(r => {{
+    const ok = (!q || r.innerText.toLowerCase().includes(q)) && (!prov || r.dataset.pprov === prov);
+    r.style.display = ok ? '' : 'none';
+    if (ok) visible++;
+  }});
+  document.getElementById('countPluvioLabel').textContent = visible + ' stazioni';
+}}
+applyPluvioFilters();
+
+let psortCol = 'ph24', psortDir = -1;
+function sortPluvio(col) {{
+  if (psortCol === col) {{ psortDir *= -1; }} else {{ psortCol = col; psortDir = -1; }}
+  document.querySelectorAll('#pluvioTable th.psortable').forEach(th => {{
+    th.classList.remove('psort-asc','psort-desc');
+    if (th.dataset.col === col) th.classList.add(psortDir === 1 ? 'psort-asc' : 'psort-desc');
+  }});
+  const tbody = document.querySelector('#pluvioTable tbody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  const key = col.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+  rows.sort((a, b) => {{
+    const av = a.dataset[key] ?? '';
+    const bv = b.dataset[key] ?? '';
+    const an = parseFloat(av), bn = parseFloat(bv);
+    if (!isNaN(an) && !isNaN(bn)) return (an - bn) * psortDir;
+    return av.localeCompare(bv, 'it') * psortDir;
+  }});
+  rows.forEach(r => tbody.appendChild(r));
+}}
+document.querySelectorAll('#pluvioTable th.psortable').forEach(th => {{
+  th.addEventListener('click', () => sortPluvio(th.dataset.col));
+}});
+sortPluvio('ph24');
 
 const mapStations = {map_stations_json};
 const map = L.map('map').setView([43.5, 11.1], 7);
