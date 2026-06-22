@@ -398,5 +398,29 @@
   "Castelmartini (GPRS)": [
     43.8231159,
     10.8404124
+  ],
+  "Pietra Piccata (GPRS)": [
+    44.3384705,
+    9.8385863
+  ],
+  "Alberese (RADIO)": [
+    42.669208,
+    11.1057807
+  ],
+  "Terricciola (RADIO)": [
+    43.524738,
+    10.680114
+  ],
+  "Castellina in Chianti (GPRS)": [
+    43.4691786,
+    11.2872857
+  ],
+  "S. Pietro a Marcigliano (RADIO)": [
+    43.9055288,
+    10.6060088
+  ],
+  "Strettoia 1 (GPRS)": [
+    43.9960994,
+    10.1979386
   ]
 }
