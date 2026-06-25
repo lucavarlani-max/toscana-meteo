@@ -534,5 +534,21 @@
   "Populonia (RADIO)": [
     42.9894467,
     10.4915674
+  ],
+  "S. Vincenzo (RADIO)": [
+    43.1006951,
+    10.5387914
+  ],
+  "Castellina Marittima  (RADIO)": [
+    43.4125688,
+    10.5761772
+  ],
+  "Pietrasanta (GPRS)": [
+    43.9589031,
+    10.2332031
+  ],
+  "Lido di Camaiore (GPRS)": [
+    43.8933095,
+    10.2286954
   ]
 }
